@@ -1,13 +1,10 @@
 import { Request, Response } from "express";
-import {
-  BIG_EAST_TEAMS,
-  updateSchedulesService,
-} from "../services/calendar.service";
+import { updateSchedulesService } from "../services/calendar.service";
 
 export async function updateSchedules(req: Request, res: Response) {
   try {
     const schedule = await updateSchedulesService(
-      (req.query.season as string) || "2025-26"
+      parseInt(req.query.season as string) || 2025
     );
     res.status(200).json(schedule);
   } catch (error) {
