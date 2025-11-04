@@ -5,3 +5,7 @@ export type Game = {
   away_team: string;
   is_conference_game: boolean;
 };
+
+export type Team = {
+  team_name: string;
+};

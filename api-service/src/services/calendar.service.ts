@@ -1,14 +1,13 @@
-import { Game } from "../types/calendar.types";
+import { Game, Team } from "../types/calendar.types";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 const BIG_EAST_CONF = "big-east";
-
-export const BIG_EAST_TEAMS: Set<string> = new Set([]);
 
 export async function updateSchedulesService(
   seasonYear: number,
   supabase: SupabaseClient
 ) {
+  const BIG_EAST_TEAMS: Set<string> = new Set([]);
   const fullYearSchedule: any[] = await fetchFullYearSchedule(seasonYear);
   const bigEastYearSchedule: any[] = fullYearSchedule.filter(function (
     contest
@@ -21,23 +20,49 @@ export async function updateSchedulesService(
     }
     return false;
   });
-  const databaseEntries: Game[] = trimGameEntries(bigEastYearSchedule);
+  const databaseEntries: Game[] = trimGameEntries(
+    bigEastYearSchedule,
+    BIG_EAST_TEAMS
+  );
 
+  uploadSchedule(databaseEntries, supabase);
+  uploadTeams(createTeamsList(BIG_EAST_TEAMS), supabase);
+}
+
+async function uploadSchedule(entries: Game[], supabase: SupabaseClient) {
   const { error } = await supabase
     .from("YearSchedule")
-    .upsert(databaseEntries, { onConflict: "contest_id" });
+    .upsert(entries, { onConflict: "contest_id" });
   if (error) {
-    console.log("Error occured on entry: ", error.message);
-  } else {
-    console.log("Entries inserted successfully!");
+    throw new Error(error.message);
   }
 }
 
-function trimGameEntries(bigEastYearSchedule: any[]): Game[] {
+async function uploadTeams(entries: Team[], supabase: SupabaseClient) {
+  const { error } = await supabase
+    .from("BigEastTeams")
+    .upsert(entries, { onConflict: "team_name" });
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+function createTeamsList(teams: Set<string>): Team[] {
+  return Array.from(teams).map((item: string) => {
+    return {
+      team_name: item,
+    };
+  });
+}
+
+function trimGameEntries(
+  bigEastYearSchedule: any[],
+  BIG_EAST_TEAMS: Set<string>
+): Game[] {
   const result: Game[] = bigEastYearSchedule.map((item: any) => {
     return {
       contest_id: item.contestId,
-      utc_start_time: new Date(item.startTimeEpoch),
+      utc_start_time: new Date(item.startTimeEpoch * 1000),
       home_team: item.teams[0].nameShort,
       away_team: item.teams[1].nameShort,
       is_conference_game:
@@ -70,9 +95,7 @@ async function fetchFullDaySchedule(
   return json.data.contests || [];
 }
 
-export async function fetchFullYearSchedule(
-  seasonYear: number
-): Promise<any[]> {
+async function fetchFullYearSchedule(seasonYear: number): Promise<any[]> {
   const allGames = [];
   const current = new Date(`${seasonYear}-10-01`);
   const end = new Date(`${seasonYear + 1}-03-31`);
@@ -90,4 +113,14 @@ export async function fetchFullYearSchedule(
   }
 
   return allGames;
+}
+
+export async function getBigEastTeamsService(
+  supabase: SupabaseClient
+): Promise<Team[]> {
+  const { data, error } = await supabase.from("BigEastTeams").select();
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data;
 }
