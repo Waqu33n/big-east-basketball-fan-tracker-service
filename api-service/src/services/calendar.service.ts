@@ -101,12 +101,10 @@ async function fetchFullYearSchedule(seasonYear: number): Promise<any[]> {
   const end = new Date(`${seasonYear + 1}-03-31`);
 
   while (current <= end) {
-    console.log(current);
     const mm = String(current.getMonth() + 1).padStart(2, "0");
     const dd = String(current.getDate()).padStart(2, "0");
     const yyyy = current.getFullYear();
     const dateStr = `${mm}/${dd}/${yyyy}`;
-    console.log(dateStr);
     const games = await fetchFullDaySchedule(seasonYear, dateStr);
     allGames.push(...games);
     current.setDate(current.getDate() + 1);
@@ -119,6 +117,22 @@ export async function getBigEastTeamsService(
   supabase: SupabaseClient
 ): Promise<Team[]> {
   const { data, error } = await supabase.from("BigEastTeams").select();
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data;
+}
+
+export async function getGamesService(
+  startDate: string,
+  endDate: string,
+  supabase: SupabaseClient
+): Promise<Game[]> {
+  const { data, error } = await supabase
+    .from("YearSchedule")
+    .select()
+    .gte("utc_start_time", startDate)
+    .lte("utc_start_time", endDate);
   if (error) {
     throw new Error(error.message);
   }
