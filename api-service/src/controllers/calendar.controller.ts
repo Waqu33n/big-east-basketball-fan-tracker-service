@@ -39,7 +39,6 @@ export async function getBigEastTeams(req: Request, res: Response) {
 export async function getGames(req: Request, res: Response) {
   try {
     const supabase: SupabaseClient = getSupabaseClient("");
-    console.log(req.query.startDate);
     const startDate: string =
       (req.query.startDate as string) || "2025-10-01T00:00:00Z";
     const endDate: string =
