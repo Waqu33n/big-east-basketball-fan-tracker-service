@@ -26,7 +26,11 @@ export async function updateSchedulesService(
   );
 
   uploadSchedule(databaseEntries, supabase);
-  uploadTeams(createTeamsList(BIG_EAST_TEAMS), supabase);
+
+  const teamsList: Team[] = Array.from(BIG_EAST_TEAMS).map((item: string) => ({
+    team_name: item,
+  }));
+  uploadTeams(teamsList, supabase);
 }
 
 async function uploadSchedule(entries: Game[], supabase: SupabaseClient) {
@@ -45,14 +49,6 @@ async function uploadTeams(entries: Team[], supabase: SupabaseClient) {
   if (error) {
     throw new Error(error.message);
   }
-}
-
-function createTeamsList(teams: Set<string>): Team[] {
-  return Array.from(teams).map((item: string) => {
-    return {
-      team_name: item,
-    };
-  });
 }
 
 function trimGameEntries(
