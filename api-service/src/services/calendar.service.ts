@@ -1,3 +1,4 @@
+import { PostgresError } from "../errors/errors";
 import { Game, Team } from "../types/calendar.types";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -7,30 +8,30 @@ export async function updateSchedulesService(
   seasonYear: number,
   supabase: SupabaseClient
 ) {
-  const BIG_EAST_TEAMS: Set<string> = new Set([]);
+  const teamShortToTeam: Map<string, Team> = new Map();
   const fullYearSchedule: any[] = await fetchFullYearSchedule(seasonYear);
-  const bigEastYearSchedule: any[] = fullYearSchedule.filter(function (
-    contest
-  ) {
-    for (const team of contest.teams) {
-      if (BIG_EAST_CONF === team.conferenceSeo) {
-        BIG_EAST_TEAMS.add(team.nameShort);
+  const bigEastYearSchedule = fullYearSchedule.filter((contest) =>
+    contest.teams.some((team: any) => {
+      if (team.conferenceSeo === BIG_EAST_CONF) {
+        teamShortToTeam.set(team.name6Char, {
+          team_short: team.name6Char,
+          team_name: team.nameShort,
+        });
         return true;
       }
-    }
-    return false;
-  });
-  const databaseEntries: Game[] = trimGameEntries(
-    bigEastYearSchedule,
-    BIG_EAST_TEAMS
+      return false;
+    })
   );
 
-  uploadSchedule(databaseEntries, supabase);
+  const databaseEntries: Game[] = parseToGameObjects(
+    bigEastYearSchedule,
+    teamShortToTeam
+  );
 
-  const teamsList: Team[] = Array.from(BIG_EAST_TEAMS).map((item: string) => ({
-    team_name: item,
-  }));
-  uploadTeams(teamsList, supabase);
+  await uploadSchedule(databaseEntries, supabase);
+
+  const teamsList: Team[] = Array.from(teamShortToTeam.values());
+  await uploadTeams(teamsList, supabase);
 }
 
 async function uploadSchedule(entries: Game[], supabase: SupabaseClient) {
@@ -38,7 +39,7 @@ async function uploadSchedule(entries: Game[], supabase: SupabaseClient) {
     .from("YearSchedule")
     .upsert(entries, { onConflict: "contest_id" });
   if (error) {
-    throw new Error(error.message);
+    throw new PostgresError(error.message);
   }
 }
 
@@ -47,26 +48,44 @@ async function uploadTeams(entries: Team[], supabase: SupabaseClient) {
     .from("BigEastTeams")
     .upsert(entries, { onConflict: "team_name" });
   if (error) {
-    throw new Error(error.message);
+    throw new PostgresError(error.message);
   }
 }
 
-function trimGameEntries(
+function parseToGameObjects(
   bigEastYearSchedule: any[],
-  BIG_EAST_TEAMS: Set<string>
+  BIG_EAST_TEAMS: Map<string, Team>
 ): Game[] {
-  const result: Game[] = bigEastYearSchedule.map((item: any) => {
+  return bigEastYearSchedule.map((item: any) => {
     return {
       contest_id: item.contestId,
       utc_start_time: new Date(item.startTimeEpoch * 1000),
-      home_team: item.teams[0].nameShort,
-      away_team: item.teams[1].nameShort,
+      home_team: item.teams[0].name6Char,
+      away_team: item.teams[1].name6Char,
       is_conference_game:
-        BIG_EAST_TEAMS.has(item.teams[0].nameShort) &&
-        BIG_EAST_TEAMS.has(item.teams[1].nameShort),
+        BIG_EAST_TEAMS.has(item.teams[0].name6Char) &&
+        BIG_EAST_TEAMS.has(item.teams[1].name6Char),
     };
   });
-  return result;
+}
+
+async function fetchFullYearSchedule(seasonYear: number): Promise<any[]> {
+  const allGames = [];
+  const current = new Date(`${seasonYear}-10-15`);
+  const end = new Date(`${seasonYear + 1}-04-15`);
+
+  while (current <= end) {
+    const mm = String(current.getMonth() + 1).padStart(2, "0");
+    const dd = String(current.getDate()).padStart(2, "0");
+    const yyyy = current.getFullYear();
+    const dateStr = `${mm}/${dd}/${yyyy}`;
+    const games = await fetchFullDaySchedule(seasonYear, dateStr);
+    allGames.push(...games);
+    console.log(dateStr);
+    current.setDate(current.getDate() + 1);
+  }
+
+  return allGames;
 }
 
 async function fetchFullDaySchedule(
@@ -91,30 +110,12 @@ async function fetchFullDaySchedule(
   return json.data.contests || [];
 }
 
-async function fetchFullYearSchedule(seasonYear: number): Promise<any[]> {
-  const allGames = [];
-  const current = new Date(`${seasonYear}-10-01`);
-  const end = new Date(`${seasonYear + 1}-03-31`);
-
-  while (current <= end) {
-    const mm = String(current.getMonth() + 1).padStart(2, "0");
-    const dd = String(current.getDate()).padStart(2, "0");
-    const yyyy = current.getFullYear();
-    const dateStr = `${mm}/${dd}/${yyyy}`;
-    const games = await fetchFullDaySchedule(seasonYear, dateStr);
-    allGames.push(...games);
-    current.setDate(current.getDate() + 1);
-  }
-
-  return allGames;
-}
-
-export async function getBigEastTeamsService(
+export async function getTeamsService(
   supabase: SupabaseClient
 ): Promise<Team[]> {
   const { data, error } = await supabase.from("BigEastTeams").select();
   if (error) {
-    throw new Error(error.message);
+    throw new PostgresError(error.message);
   }
   return data;
 }
@@ -130,7 +131,7 @@ export async function getGamesService(
     .gte("utc_start_time", startDate)
     .lte("utc_start_time", endDate);
   if (error) {
-    throw new Error(error.message);
+    throw new PostgresError(error.message);
   }
   return data;
 }
