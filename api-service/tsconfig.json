@@ -3,13 +3,13 @@
   "compilerOptions": {
     // File Layout
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "CommonJS",
     "target": "ES2022",
-    "types": [],
+    "types": ["jest", "node"],
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],

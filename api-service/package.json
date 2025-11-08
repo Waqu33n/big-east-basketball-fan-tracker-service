@@ -4,7 +4,9 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "lint": "npx eslint ./src/**",
     "lint:fix": "npx eslint ./src/** --fix",
     "dev": "tsx watch src/server.ts",
@@ -16,10 +18,13 @@
   "license": "ISC",
   "packageManager": "pnpm@10.5.2",
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.9.1",
     "eslint": "^9.38.0",
     "globals": "^16.4.0",
+    "jest": "^30.2.0",
     "jiti": "^2.6.1",
+    "ts-jest": "^29.4.5",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.2"
@@ -28,6 +33,7 @@
     "@supabase/supabase-js": "^2.78.0",
     "@types/express": "^5.0.4",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "ts-node": "^10.9.2"
   }
 }
