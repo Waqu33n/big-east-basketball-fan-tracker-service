@@ -7,7 +7,11 @@ import {
 import { getSupabaseClient } from "../clients/supabaseClient";
 import { Game, Team } from "../types/calendar.types";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { InvalidTokenError, PostgresError } from "../errors/errors";
+import {
+  InvalidTokenError,
+  PostgresError,
+  ExternalAPIError,
+} from "../errors/errors";
 
 export async function updateSchedules(req: Request, res: Response) {
   try {
@@ -26,7 +30,10 @@ export async function updateSchedules(req: Request, res: Response) {
   } catch (error) {
     if (error instanceof InvalidTokenError) {
       res.status(401).json({ message: error.message });
-    } else if (error instanceof PostgresError) {
+    } else if (
+      error instanceof PostgresError ||
+      error instanceof ExternalAPIError
+    ) {
       res.status(502).json({ message: error.message });
     } else {
       res.status(500).json({

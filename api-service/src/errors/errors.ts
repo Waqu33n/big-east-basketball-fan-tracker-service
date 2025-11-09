@@ -11,3 +11,10 @@ export class PostgresError extends Error {
     this.name = "PostgresError";
   }
 }
+
+export class ExternalAPIError extends Error {
+  constructor(message: string) {
+    super(`ExternalAPIError: ${message}`);
+    this.name = "ExternalAPIError";
+  }
+}

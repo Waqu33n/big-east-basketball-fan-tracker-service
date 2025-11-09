@@ -1,4 +1,4 @@
-import { PostgresError } from "../errors/errors";
+import { ExternalAPIError, PostgresError } from "../errors/errors";
 import { Game, Team } from "../types/calendar.types";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -106,6 +106,11 @@ async function fetchFullDaySchedule(
   const url = `https://sdataprod.ncaa.com/?meta=GetContests_web&extensions={"persistedQuery":{"version":1,"sha256Hash":"7287cda610a9326931931080cb3a604828febe6fe3c9016a7e4a36db99efdb7c"}}&queryName=GetContests_web&variables=${variables}`;
 
   const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+  if (!res.ok) {
+    throw new ExternalAPIError(
+      `Failed to fetch data from NCAA: ${res.statusText}`
+    );
+  }
   const json = await res.json();
   return json.data.contests || [];
 }
