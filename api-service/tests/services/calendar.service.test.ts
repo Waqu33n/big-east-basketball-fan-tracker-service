@@ -1,9 +1,8 @@
-// tests/services/games.service.test.ts
 import {
   getGamesService,
   getTeamsService,
   updateSchedulesService,
-} from "../../src/services/calendar.service";
+} from "../../src/services/calendar.service.js";
 import { createClient } from "@supabase/supabase-js";
 
 const mockFrom = jest.fn();

@@ -1,9 +1,13 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { configDotenv } from "dotenv";
 
-configDotenv();
+if (process.env.NODE_ENV !== "production") {
+  configDotenv();
+}
 
-export function getSupabaseClient(accessToken: string | undefined) {
+export function getSupabaseClient(
+  accessToken: string | undefined
+): SupabaseClient {
   const supabase = createClient(
     process.env.SUPABASE_URL as string,
     process.env.SUPABASE_ANON_KEY as string,

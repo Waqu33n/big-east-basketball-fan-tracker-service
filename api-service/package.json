@@ -1,17 +1,21 @@
 {
-  "name": "api-service",
+  "name": "big-east-fan-tracker-api",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "type": "module",
+  "main": "dst/lambda.js",
   "scripts": {
     "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
     "lint": "npx eslint ./src/**",
     "lint:fix": "npx eslint ./src/** --fix",
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
+    "clean": "rimraf dist build_lambda lambda.zip",
+    "build": "pnpm run clean && tsc -p tsconfig.lambda.json",
+    "start": "node build_lambda/dist/server.js",
+    "build:lambda": "pnpm run build && mkdirp build_lambda && cpx package.json build_lambda/ && cpx dist/src/** build_lambda/dist && pnpm install --prod --prefix build_lambda --ignore-scripts --shamefully-hoist",
+    "zip:lambda": "cd build_lambda && zip -r ../lambda.zip .",
+    "deploy:lambda": "aws lambda update-function-code --function-name big-east-fan-tracker-api --zip-file fileb://lambda.zip",
+    "lambda:deploy": "pnpm run build:lambda && pnpm run zip:lambda && pnpm run deploy:lambda"
   },
   "keywords": [],
   "author": "",
@@ -20,11 +24,15 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^24.9.1",
+    "cpx": "^1.5.0",
     "eslint": "^9.38.0",
     "globals": "^16.4.0",
     "jest": "^30.2.0",
     "jiti": "^2.6.1",
+    "mkdirp": "^3.0.1",
+    "rimraf": "^6.1.0",
     "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.2"
@@ -34,6 +42,6 @@
     "@types/express": "^5.0.4",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "ts-node": "^10.9.2"
+    "serverless-http": "^4.0.0"
   }
 }

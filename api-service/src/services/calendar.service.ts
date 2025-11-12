@@ -1,5 +1,5 @@
-import { ExternalAPIError, PostgresError } from "../errors/errors";
-import { Game, Team } from "../types/calendar.types";
+import { ExternalAPIError, PostgresError } from "../errors/errors.js";
+import { Game, Team } from "../types/calendar.types.js";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 const BIG_EAST_CONF = "big-east";

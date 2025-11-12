@@ -1,19 +1,22 @@
-/**
- * For a detailed explanation regarding each configuration property, visit:
- * https://jestjs.io/docs/configuration
- */
-
 import type { Config } from "jest";
 
 const config: Config = {
-  preset: "ts-jest",
-  testEnvironment: "node",
-  roots: ["src", "tests"], // where your TS files live
-  moduleFileExtensions: ["ts", "js", "json"],
+  preset: "ts-jest/presets/default-esm", // or 'ts-jest' for CommonJS
   transform: {
-    "^.+\\.ts$": "ts-jest",
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        tsconfig: "tsconfig.test.json",
+        useESM: true,
+      },
+    ],
   },
-  testMatch: ["**/*.test.ts"], // only run .test.ts files
+  testEnvironment: "node",
+  moduleNameMapper: {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+  },
+  extensionsToTreatAsEsm: [".ts"],
+  testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
   // All imported modules in your tests should be mocked automatically
   // automock: false,
 

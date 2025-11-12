@@ -3,7 +3,7 @@ import {
   getTeams,
   getGames,
   updateSchedules,
-} from "../controllers/calendar.controller";
+} from "../controllers/calendar.controller.js";
 
 const router: Router = Router();
 

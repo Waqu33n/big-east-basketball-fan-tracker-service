@@ -3,15 +3,15 @@ import {
   updateSchedulesService,
   getTeamsService,
   getGamesService,
-} from "../services/calendar.service";
-import { getSupabaseClient } from "../clients/supabaseClient";
-import { Game, Team } from "../types/calendar.types";
+} from "../services/calendar.service.js";
+import { getSupabaseClient } from "../clients/supabaseClient.js";
+import { Game, Team } from "../types/calendar.types.js";
 import { SupabaseClient } from "@supabase/supabase-js";
 import {
   InvalidTokenError,
   PostgresError,
   ExternalAPIError,
-} from "../errors/errors";
+} from "../errors/errors.js";
 
 export async function updateSchedules(req: Request, res: Response) {
   try {
@@ -49,6 +49,7 @@ export async function getTeams(req: Request, res: Response) {
     const teams: Team[] = await getTeamsService(supabase);
     res.status(200).json(teams);
   } catch (error) {
+    console.error("Error in getTeams:", error);
     if (error instanceof PostgresError) {
       res.status(502).json({ message: error });
     } else {

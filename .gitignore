@@ -56,6 +56,8 @@ web_modules/
 # Optional stylelint cache
 .stylelintcache
 
+*.zip
+
 # Optional REPL history
 .node_repl_history
 
@@ -81,6 +83,7 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
+build_lambda
 
 # Gatsby files
 .cache/
