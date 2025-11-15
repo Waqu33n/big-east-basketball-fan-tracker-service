@@ -1,5 +1,5 @@
 import { Router } from "express";
-import calendarRoutes from "./calendar.routes";
+import calendarRoutes from "./calendar.routes.js";
 
 const router: Router = Router();
 
